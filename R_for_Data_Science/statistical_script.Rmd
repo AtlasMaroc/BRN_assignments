@@ -1,0 +1,96 @@
+```{r setup, include = FALSE}
+library(tidyverse)
+knitr::opts_chunk$set(
+  caching = TRUE,
+  collapse = TRUE
+)
+```
+
+### Loading the data
+
+```{r, echo=FALSE}
+data_frame = read_csv('./gapminder_clean.csv', na = c('', 'N/A'))
+```
+
+
+```{r}
+head(data_frame)
+```
+
+### Data Visualization
+```{r}
+
+filtered_data = data_frame |>
+  filter(Year == 1962) 
+  
+
+filtered_data |>
+  select(starts_with('CO2'), gdpPercap) |>
+  rename(co2 = starts_with('CO2')) |>
+  filter(if_all(everything(), ~ !is.na(.))) |>
+  ggplot() +
+  geom_point(aes(x = co2, y = gdpPercap)) +
+  labs(
+    x = 'CO2 emissions (metric tons per capita)',
+    y = 'GDP per capita',
+    title = 'CO2 emissions per capita generally increases with GDP'
+  )
+```
+
+
+
+
+### correlation between CO2 emission and GDP growth
+```{r}
+correlation_columns = filtered_data |>
+  select(starts_with('CO2'), gdpPercap) |>
+  rename(co2 = starts_with('CO2')) |>
+  filter(if_all(everything(), ~ !is.na(.)))
+
+#since the tow variables are quantitative continuous, i used Pearson correlation
+#by default the cor() function will use Pearson method
+#the function output a value of 0.9260817 indicating there is a positive relation between the two variables (evolving in the same direction)
+
+cor(correlation_columns$co2,
+    correlation_columns$gdpPercap,
+    method = 'pearson')
+
+#the p_vlaue is used to assess the probability of getting a correlation coefficient as extreme as r, if we sample from a population when the null hypothesis r = 0 is true
+
+cor.test(correlation_columns$co2,
+    correlation_columns$gdpPercap,
+    method = 'pearson')
+```
+
+```{r}
+
+data_frame |>
+  select(
+    Year,
+    co2 = starts_with('CO2'),
+    gdpPercap
+  ) |>
+  filter(!is.na(co2), !is.na(gdpPercap)) |>
+  group_by(Year) |>
+  summarise(
+    r = cor(co2, gdpPercap),
+    .groups = 'drop'
+  ) |>
+  ggplot() +
+  geom_bar(aes(x = Year, y = r, fill = factor(Year)),
+           stat = 'identity') +
+  geom_text(aes(x = Year, y = r, label = round(r, 2)),
+                vjust = -0.5) +
+  theme(legend.position = 'none')
+```
+```{r}
+ 
+data_frame |>
+  filter(Year == 1967) |>
+  select( co2 = starts_with('CO2'),
+          gdpPercap,
+          pop,
+          continent) |>
+  ggplot() +
+  geom_point(aes(x = gdpPercap, y = co2, size = pop, color = continent))
+```
