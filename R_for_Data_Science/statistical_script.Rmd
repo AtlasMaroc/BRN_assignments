@@ -1,4 +1,5 @@
 ```{r setup, include = FALSE}
+library(scales)
 library(tidyverse)
 knitr::opts_chunk$set(
   caching = TRUE,
@@ -29,10 +30,10 @@ filtered_data |>
   rename(co2 = starts_with('CO2')) |>
   filter(if_all(everything(), ~ !is.na(.))) |>
   ggplot() +
-  geom_point(aes(x = co2, y = gdpPercap)) +
+  geom_point(aes(x = gdpPercap, y = co2)) +
   labs(
-    x = 'CO2 emissions (metric tons per capita)',
-    y = 'GDP per capita',
+    x = 'GDP per capita',
+    y = 'CO2 emissions (metric tons per capita)',
     title = 'CO2 emissions per capita generally increases with GDP'
   )
 ```
@@ -77,20 +78,35 @@ data_frame |>
     .groups = 'drop'
   ) |>
   ggplot() +
-  geom_bar(aes(x = Year, y = r, fill = factor(Year)),
+  geom_bar(aes(x = Year, y = r),
            stat = 'identity') +
   geom_text(aes(x = Year, y = r, label = round(r, 2)),
                 vjust = -0.5) +
+  scale_x_continuous(breaks = sort(unique(data_frame$Year))) +
   theme(legend.position = 'none')
 ```
+
 ```{r}
- 
-data_frame |>
+library(plotly)
+plot = data_frame |>
   filter(Year == 1967) |>
   select( co2 = starts_with('CO2'),
           gdpPercap,
           pop,
           continent) |>
   ggplot() +
-  geom_point(aes(x = gdpPercap, y = co2, size = pop, color = continent))
+  geom_point(aes(x = gdpPercap, y = co2, size = pop, color = continent)) +
+  scale_x_continuous(
+    labels = label_dollar(scale = 1/1000, suffix = 'K')
+  ) +
+  coord_cartesian(
+    xlim = c(0,20000),
+    ylim = c(0,25)
+  ) +
+  labs(
+    x = 'GDP per capita',
+    y = 'CO2 emissions (metric tons per capita)'
+    )
+
+ggplotly(plot) 
 ```
