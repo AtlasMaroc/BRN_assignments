@@ -40,7 +40,6 @@ filtered_data |>
 
 
 
-
 ### correlation between CO2 emission and GDP growth
 ```{r}
 correlation_columns = filtered_data |>
@@ -162,4 +161,46 @@ since (p > 0.05), we will accept the Null Hypothesis that there isn't a signific
 
 ##What is the country (or countries) that has the highest 'Population density (people per sq. km of land area)' across all years? (i.e., which country has the highest average ranking in this category across each time point in the dataset?)
 
+```{r}
 
+data_frame |>
+  group_by(`Country Name`) |>
+  summarise(avg_pop_dens_yrs = as.numeric(mean(`Population density (people per sq. km of land area)`, na.rm = TRUE))) |>
+  arrange(desc(avg_pop_dens_yrs)) |>
+  head(10) |>
+  ggplot() +
+  geom_bar(aes(x = `Country Name`, y = avg_pop_dens_yrs),
+           stat = 'identity') +
+  geom_text(aes(x = `Country Name`, y = avg_pop_dens_yrs, 
+                 label = round(avg_pop_dens_yrs, 2)),
+            vjust = -0.25) +
+  coord_cartesian(ylim = c(0,17000))+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+as we can observe in the bar chart, Macao region in China has the highest average population density over the years.
+
+## What country (or countries) has shown the greatest increase in 'Life expectancy at birth, total (years)' between 1962 and 2007?
+
+```{r}
+
+data_frame |>
+  group_by(`Country Name`) |>
+  filter(Year %in% c(1962:2007)) |>
+  summarise(
+    birth_exp_2007 = `Life expectancy at birth, total (years)`[Year == 2007],
+    birth_exp_1962 = `Life expectancy at birth, total (years)`[Year == 1962],
+    percent_change = ((birth_exp_2007 - birth_exp_1962) / birth_exp_1962) * 100
+                         ) |>
+  arrange(desc(percent_change)) |>
+  head(10) |>
+  ggplot() +
+  geom_bar(aes(x = `Country Name`, y = percent_change),
+           stat = 'identity') +
+  geom_text(aes(x = `Country Name`, y = percent_change, 
+                 label = round(percent_change, 2)),
+            vjust = -0.25) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(
+    y = 'Aver'
+  )
+```
